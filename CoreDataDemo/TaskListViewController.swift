@@ -24,10 +24,11 @@ class TaskListViewController: UITableViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+    
         StorageManager.shared.fetchData { taskList in
             self.taskList = taskList
         }
-       tableView.reloadData()
+        tableView.reloadData()
         
     }
  
