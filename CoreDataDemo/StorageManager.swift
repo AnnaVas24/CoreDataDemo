@@ -35,22 +35,29 @@ class StorageManager {
         }
     }
     
-    func saveTask(_ taskName: String, completion: @escaping([Task]) -> Void) {
-        let context = persistentContainer.viewContext
-        let task = Task(context: context)
+    func saveTask(_ taskName: String, completion: (Task) -> Void) {
+        let task = Task(context: persistentContainer.viewContext)
         task.name = taskName
-        var taskList: [Task] = []
-        taskList.append(task)
-        
+        completion(task)
         saveContext()
     }
     
-    func fetchData(completion: @escaping([Task]) -> Void) {
+    func deleteTask(_ deletedTask: Task) {
+        persistentContainer.viewContext.delete(deletedTask)
+        saveContext()
+        
+    }
+    
+    func editTask(_ editingTask: Task, newTaskName: String) {
+        editingTask.name = newTaskName
+        saveContext()
+    }
+    
+    func fetchData(completion: ([Task]) -> Void) {
         let fetchRequest = Task.fetchRequest()
-        let context = persistentContainer.viewContext
         
         do {
-            let taskList = try context.fetch(fetchRequest)
+            let taskList = try persistentContainer.viewContext.fetch(fetchRequest)
                 completion(taskList)
         } catch {
            print("Faild to fetch data", error)

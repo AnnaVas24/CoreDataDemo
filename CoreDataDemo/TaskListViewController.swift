@@ -22,15 +22,6 @@ class TaskListViewController: UITableViewController {
         }
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-    
-        StorageManager.shared.fetchData { taskList in
-            self.taskList = taskList
-        }
-        tableView.reloadData()
-        
-    }
  
     private func setupNavigationBar() {
         title = "Task List"
@@ -62,7 +53,7 @@ class TaskListViewController: UITableViewController {
     }
     
     @objc private func addNewTask() {
-        showAlert(with: "New Task", and: "What do you want to do?")
+        showAlert(with: "New Task", and: "What would you like to do?")
     }
     
     
@@ -70,8 +61,8 @@ class TaskListViewController: UITableViewController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
             guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
-            StorageManager.shared.saveTask(task) { tasklist in
-                self.taskList = tasklist
+            StorageManager.shared.saveTask(task) { task in
+                self.taskList.append(task)
                 let cellIndex = IndexPath(row: self.taskList.count - 1, section: 0)
                 self.tableView.insertRows(at: [cellIndex], with: .automatic)
             }
@@ -85,6 +76,27 @@ class TaskListViewController: UITableViewController {
         alert.addTextField { textField in
             textField.placeholder = "New Task"
         }
+        
+        present(alert, animated: true)
+    }
+    
+    private func showEditAlert(with title: String, and message: String, selectedRow: Int) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let editAction = UIAlertAction(title: "Edit", style: .default) { _ in
+            guard let newTaskName = alert.textFields?.first?.text, !newTaskName.isEmpty else { return }
+            StorageManager.shared.editTask(self.taskList[selectedRow], newTaskName: newTaskName)
+            self.taskList[selectedRow].name = newTaskName
+            self.tableView.reloadData()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
+        
+        alert.addAction(editAction)
+        alert.addAction(cancelAction)
+        alert.addTextField { textField in
+            textField.text = self.taskList[selectedRow].name
+        }
+        
         present(alert, animated: true)
     }
    
@@ -103,5 +115,30 @@ extension TaskListViewController {
         content.text = task.name
         cell.contentConfiguration = content
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (action, sourceView, completionHandler) in
+            self.taskList.remove(at: indexPath.row)
+            StorageManager.shared.deleteTask(self.taskList[indexPath.row])
+            self.tableView.deleteRows(at: [indexPath], with: .fade)
+            completionHandler(true)
+        }
+        deleteAction.backgroundColor = UIColor.red
+        deleteAction.image = UIImage(systemName: "trash")
+        
+        let editAction = UIContextualAction(style: .normal, title: "Edit") { (action, sourceView, completionHandler) in
+            self.showEditAlert(with: "Edit", and: "Please edit the task", selectedRow: indexPath.row)
+            completionHandler(true)
+        }
+        
+        editAction.backgroundColor = UIColor.lightGray
+        editAction.image = UIImage(systemName: "square.and.pencil")
+        
+        let swipeConfiguration = UISwipeActionsConfiguration(actions: [deleteAction, editAction])
+        return swipeConfiguration
     }
 }
