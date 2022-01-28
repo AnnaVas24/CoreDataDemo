@@ -121,7 +121,7 @@ extension TaskListViewController {
         tableView.deselectRow(at: indexPath, animated: true)
     }
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (action, sourceView, completionHandler) in
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (_, _, completionHandler) in
             self.taskList.remove(at: indexPath.row)
             StorageManager.shared.deleteTask(self.taskList[indexPath.row])
             self.tableView.deleteRows(at: [indexPath], with: .fade)
@@ -130,7 +130,7 @@ extension TaskListViewController {
         deleteAction.backgroundColor = UIColor.red
         deleteAction.image = UIImage(systemName: "trash")
         
-        let editAction = UIContextualAction(style: .normal, title: "Edit") { (action, sourceView, completionHandler) in
+        let editAction = UIContextualAction(style: .normal, title: "Edit") { (_, _, completionHandler) in
             self.showEditAlert(with: "Edit", and: "Please edit the task", selectedRow: indexPath.row)
             completionHandler(true)
         }
